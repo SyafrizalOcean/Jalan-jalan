@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Peta Petualangan Rachel!</title>
+    <!-- Menggunakan Tailwind CSS untuk styling cepat -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Menggunakan font yang ceria ala kartun */
+        @import url('https://fonts.googleapis.com/css2?family=Fredoka+One&display=swap');
+        
+        body {
+            font-family: 'Fredoka One', cursive;
+            background-color: #8be15c; /* Hijau alam Dora */
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+        }
+
+        .map-container {
+            position: relative;
+            width: 100%;
+            height: 450px;
+            background-color: #a3e635;
+            border-radius: 20px;
+            border: 4px solid #fff;
+            box-shadow: 0 10px 15px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        /* SVG untuk jalan berkelok */
+        .path-svg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+
+        .waypoint {
+            position: absolute;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            z-index: 10;
+        }
+
+        .marker-icon {
+            font-size: 2.5rem;
+            filter: drop-shadow(2px 4px 0px rgba(0,0,0,0.2));
+        }
+
+        .time-badge {
+            background: white;
+            color: #ec4899;
+            padding: 2px 10px;
+            border-radius: 12px;
+            font-size: 0.9rem;
+            margin-top: 5px;
+            border: 2px solid #ec4899;
+            opacity: 0; /* Disembunyikan sebelum tombol dipencet */
+            transition: opacity 0.5s;
+        }
+
+        /* Avatar Rachel yang akan bergerak */
+        #avatar {
+            position: absolute;
+            top: 15%;
+            left: 20%;
+            transform: translate(-50%, -50%);
+            font-size: 2.5rem;
+            z-index: 20;
+            transition: all 2.5s ease-in-out; /* Animasi pergerakan */
+            filter: drop-shadow(2px 4px 0px rgba(0,0,0,0.3));
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen p-4">
+
+    <div class="max-w-md w-full bg-white rounded-3xl shadow-2xl p-6 border-4 border-pink-400">
+        
+        <div class="text-center mb-6">
+            <h1 class="text-3xl text-pink-500 mb-2">Petualangan Rachel! 🎒🗺️</h1>
+            <p class="text-gray-600 font-sans text-sm">Tentukan jam berapa kamu mau mulai jalan besok!</p>
+        </div>
+
+        <!-- Input Waktu -->
+        <div class="flex flex-col items-center mb-6 gap-3">
+            <input type="time" id="waktuBerangkat" class="text-2xl p-3 border-4 border-yellow-400 rounded-xl focus:outline-none focus:border-pink-400 font-sans font-bold text-gray-700">
+            <button onclick="mulaiPetualangan()" class="bg-yellow-400 hover:bg-yellow-500 text-pink-600 border-b-4 border-yellow-600 active:border-b-0 active:mt-1 px-6 py-3 rounded-full text-xl transition-all">
+                Mulai Petualangan! 🚀
+            </button>
+        </div>
+
+        <!-- Peta Area -->
+        <div class="map-container relative">
+            <!-- Jalan tanah berkelok -->
+            <svg class="path-svg" viewBox="0 0 100 100" preserveAspectRatio="none">
+                <path d="M 20 15 C 50 15, 80 30, 80 50 C 80 70, 40 70, 30 85" fill="none" stroke="#d97706" stroke-width="8" stroke-linecap="round" stroke-dasharray="10, 5" />
+            </svg>
+
+            <!-- Titik 1: Rumah -->
+            <div class="waypoint" style="top: 15%; left: 20%;">
+                <div class="marker-icon">🏠</div>
+                <div class="text-xs text-white bg-green-700 px-2 rounded-full mt-1">Rumah</div>
+                <div id="waktu-rumah" class="time-badge">--:--</div>
+            </div>
+
+            <!-- Titik 2: Terminal -->
+            <div class="waypoint" style="top: 50%; left: 80%;">
+                <div class="marker-icon">🚌</div>
+                <div class="text-xs text-white bg-blue-600 px-2 rounded-full mt-1">Leuwipanjang</div>
+                <div id="waktu-terminal" class="time-badge">--:--</div>
+            </div>
+
+            <!-- Titik 3: Point Lab -->
+            <div class="waypoint" style="top: 85%; left: 30%;">
+                <div class="marker-icon">🏢</div>
+                <div class="text-xs text-white bg-pink-500 px-2 rounded-full mt-1">Point Lab</div>
+                <div id="waktu-pointlab" class="time-badge">--:--</div>
+            </div>
+
+            <!-- Karakter Avatar -->
+            <div id="avatar">👧</div>
+        </div>
+    </div>
+
+    <script>
+        // Fungsi untuk format jam supaya selalu dua digit (misal 07:05)
+        function formatWaktu(dateObj) {
+            return dateObj.getHours().toString().padStart(2, '0') + ':' + 
+                   dateObj.getMinutes().toString().padStart(2, '0');
+        }
+
+        function mulaiPetualangan() {
+            const inputWaktu = document.getElementById('waktuBerangkat').value;
+            
+            if (!inputWaktu) {
+                alert("Isi jam berangkatnya dulu dong! 🕒");
+                return;
+            }
+
+            // Ekstrak jam dan menit dari input
+            let [jam, menit] = inputWaktu.split(':').map(Number);
+            
+            // Buat objek Date untuk hari ini dengan jam yang diinput
+            let waktuMulai = new Date();
+            waktuMulai.setHours(jam, menit, 0);
+
+            // Hitung estimasi waktu
+            // Ke Terminal: +1 Jam (60 menit)
+            let waktuTerminal = new Date(waktuMulai.getTime() + (60 * 60000));
+            // Ke Point Lab: +20 Menit dari Terminal (Total 80 menit dari berangkat)
+            let waktuPointLab = new Date(waktuMulai.getTime() + (80 * 60000));
+
+            // Tampilkan waktu di peta
+            document.getElementById('waktu-rumah').innerText = formatWaktu(waktuMulai);
+            document.getElementById('waktu-terminal').innerText = formatWaktu(waktuTerminal);
+            document.getElementById('waktu-pointlab').innerText = formatWaktu(waktuPointLab);
+
+            // Munculkan badge waktu
+            document.querySelectorAll('.time-badge').forEach(badge => {
+                badge.style.opacity = '1';
+            });
+
+            // Mulai Animasi Pergerakan
+            const avatar = document.getElementById('avatar');
+            
+            // Reset ke posisi awal (Rumah)
+            avatar.style.transition = 'none'; // Matikan transisi sebentar
+            avatar.style.top = '15%';
+            avatar.style.left = '20%';
+            avatar.innerText = '👧'; 
+
+            // Paksa browser membaca perubahan sebelum menyalakan transisi lagi
+            setTimeout(() => {
+                avatar.style.transition = 'all 2.5s ease-in-out';
+                
+                // Jalan ke Terminal naik Bus
+                avatar.style.top = '50%';
+                avatar.style.left = '80%';
+                avatar.innerText = '🚌💨'; // Ganti icon jadi bus
+                
+                // Jalan ke Point Lab dijemput motor (setelah sampai terminal)
+                setTimeout(() => {
+                    avatar.style.top = '85%';
+                    avatar.style.left = '30%';
+                    avatar.innerText = '🏍️👫'; // Ganti icon jadi boncengan berdua!
+                }, 3000); // Tunggu 3 detik (durasi transisi pertama + sedikit delay)
+
+            }, 50);
+        }
+    </script>
+</body>
+</html>
