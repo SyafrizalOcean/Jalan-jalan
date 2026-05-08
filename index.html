@@ -4,15 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Peta Petualangan Rachel!</title>
-    <!-- Menggunakan Tailwind CSS untuk styling cepat -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        /* Menggunakan font yang ceria ala kartun */
         @import url('https://fonts.googleapis.com/css2?family=Fredoka+One&display=swap');
         
         body {
             font-family: 'Fredoka One', cursive;
-            background-color: #8be15c; /* Hijau alam Dora */
+            background-color: #8be15c;
             margin: 0;
             padding: 0;
             overflow-x: hidden;
@@ -29,7 +27,6 @@
             overflow: hidden;
         }
 
-        /* SVG untuk jalan berkelok */
         .path-svg {
             position: absolute;
             top: 0;
@@ -56,14 +53,14 @@
             color: #ec4899;
             padding: 2px 10px;
             border-radius: 12px;
-            font-size: 0.9rem;
+            font-size: 0.8rem;
             margin-top: 5px;
             border: 2px solid #ec4899;
-            opacity: 0; /* Disembunyikan sebelum tombol dipencet */
+            opacity: 0; 
             transition: opacity 0.5s;
+            white-space: nowrap;
         }
 
-        /* Avatar Rachel yang akan bergerak */
         #avatar {
             position: absolute;
             top: 15%;
@@ -71,7 +68,7 @@
             transform: translate(-50%, -50%);
             font-size: 2.5rem;
             z-index: 20;
-            transition: all 2.5s ease-in-out; /* Animasi pergerakan */
+            transition: all 2.5s ease-in-out;
             filter: drop-shadow(2px 4px 0px rgba(0,0,0,0.3));
         }
     </style>
@@ -82,113 +79,146 @@
         
         <div class="text-center mb-6">
             <h1 class="text-3xl text-pink-500 mb-2">Petualangan Rachel! 🎒🗺️</h1>
-            <p class="text-gray-600 font-sans text-sm">Tentukan jam berapa kamu mau mulai jalan besok!</p>
+            <p class="text-gray-600 font-sans text-sm mb-4">Atur jadwal berangkat dan dijemput pulangnya!</p>
         </div>
 
-        <!-- Input Waktu -->
-        <div class="flex flex-col items-center mb-6 gap-3">
-            <input type="time" id="waktuBerangkat" class="text-2xl p-3 border-4 border-yellow-400 rounded-xl focus:outline-none focus:border-pink-400 font-sans font-bold text-gray-700">
-            <button onclick="mulaiPetualangan()" class="bg-yellow-400 hover:bg-yellow-500 text-pink-600 border-b-4 border-yellow-600 active:border-b-0 active:mt-1 px-6 py-3 rounded-full text-xl transition-all">
-                Mulai Petualangan! 🚀
-            </button>
+        <div class="grid grid-cols-2 gap-4 mb-6">
+            <div class="flex flex-col items-center bg-blue-50 p-3 rounded-xl border-2 border-blue-200">
+                <label class="text-xs text-blue-600 mb-1">Berangkat Rumah:</label>
+                <input type="time" id="waktuBerangkat" class="text-lg p-1 border-2 border-blue-400 rounded-lg focus:outline-none w-full text-center mb-2 font-sans font-bold">
+                <button onclick="mulaiPergi()" class="bg-blue-400 hover:bg-blue-500 text-white w-full py-2 rounded-full text-sm transition-all border-b-4 border-blue-600 active:border-b-0 active:translate-y-1">
+                    Jalan! 🚀
+                </button>
+            </div>
+
+            <div class="flex flex-col items-center bg-pink-50 p-3 rounded-xl border-2 border-pink-200">
+                <label class="text-xs text-pink-600 mb-1">Pulang Point Lab:</label>
+                <input type="time" id="waktuPulang" class="text-lg p-1 border-2 border-pink-400 rounded-lg focus:outline-none w-full text-center mb-2 font-sans font-bold">
+                <button onclick="mulaiPulang()" class="bg-pink-400 hover:bg-pink-500 text-white w-full py-2 rounded-full text-sm transition-all border-b-4 border-pink-600 active:border-b-0 active:translate-y-1">
+                    Dijemput! 🏍️
+                </button>
+            </div>
         </div>
 
-        <!-- Peta Area -->
         <div class="map-container relative">
-            <!-- Jalan tanah berkelok -->
             <svg class="path-svg" viewBox="0 0 100 100" preserveAspectRatio="none">
                 <path d="M 20 15 C 50 15, 80 30, 80 50 C 80 70, 40 70, 30 85" fill="none" stroke="#d97706" stroke-width="8" stroke-linecap="round" stroke-dasharray="10, 5" />
             </svg>
 
-            <!-- Titik 1: Rumah -->
             <div class="waypoint" style="top: 15%; left: 20%;">
                 <div class="marker-icon">🏠</div>
-                <div class="text-xs text-white bg-green-700 px-2 rounded-full mt-1">Rumah</div>
+                <div class="text-xs text-white bg-green-600 px-2 rounded-full mt-1">Rumah</div>
                 <div id="waktu-rumah" class="time-badge">--:--</div>
             </div>
 
-            <!-- Titik 2: Terminal -->
             <div class="waypoint" style="top: 50%; left: 80%;">
                 <div class="marker-icon">🚌</div>
                 <div class="text-xs text-white bg-blue-600 px-2 rounded-full mt-1">Leuwipanjang</div>
                 <div id="waktu-terminal" class="time-badge">--:--</div>
             </div>
 
-            <!-- Titik 3: Point Lab -->
             <div class="waypoint" style="top: 85%; left: 30%;">
                 <div class="marker-icon">🏢</div>
                 <div class="text-xs text-white bg-pink-500 px-2 rounded-full mt-1">Point Lab</div>
                 <div id="waktu-pointlab" class="time-badge">--:--</div>
             </div>
 
-            <!-- Karakter Avatar -->
             <div id="avatar">👧</div>
         </div>
     </div>
 
     <script>
-        // Fungsi untuk format jam supaya selalu dua digit (misal 07:05)
         function formatWaktu(dateObj) {
             return dateObj.getHours().toString().padStart(2, '0') + ':' + 
                    dateObj.getMinutes().toString().padStart(2, '0');
         }
 
-        function mulaiPetualangan() {
+        function resetWaktuBadge() {
+            document.getElementById('waktu-rumah').style.opacity = '0';
+            document.getElementById('waktu-terminal').style.opacity = '0';
+            document.getElementById('waktu-pointlab').style.opacity = '0';
+        }
+
+        function mulaiPergi() {
             const inputWaktu = document.getElementById('waktuBerangkat').value;
-            
             if (!inputWaktu) {
-                alert("Isi jam berangkatnya dulu dong! 🕒");
+                alert("Isi jam berangkat dari rumahnya dulu dong! 🕒");
                 return;
             }
 
-            // Ekstrak jam dan menit dari input
             let [jam, menit] = inputWaktu.split(':').map(Number);
-            
-            // Buat objek Date untuk hari ini dengan jam yang diinput
             let waktuMulai = new Date();
             waktuMulai.setHours(jam, menit, 0);
 
-            // Hitung estimasi waktu
-            // Ke Terminal: +1 Jam (60 menit)
+            // Perjalanan berangkat
             let waktuTerminal = new Date(waktuMulai.getTime() + (60 * 60000));
-            // Ke Point Lab: +20 Menit dari Terminal (Total 80 menit dari berangkat)
             let waktuPointLab = new Date(waktuMulai.getTime() + (80 * 60000));
 
-            // Tampilkan waktu di peta
-            document.getElementById('waktu-rumah').innerText = formatWaktu(waktuMulai);
-            document.getElementById('waktu-terminal').innerText = formatWaktu(waktuTerminal);
-            document.getElementById('waktu-pointlab').innerText = formatWaktu(waktuPointLab);
+            document.getElementById('waktu-rumah').innerText = formatWaktu(waktuMulai) + " (Mulai)";
+            document.getElementById('waktu-terminal').innerText = formatWaktu(waktuTerminal) + " (Tiba)";
+            document.getElementById('waktu-pointlab').innerText = formatWaktu(waktuPointLab) + " (Tiba)";
 
-            // Munculkan badge waktu
-            document.querySelectorAll('.time-badge').forEach(badge => {
-                badge.style.opacity = '1';
-            });
+            document.querySelectorAll('.time-badge').forEach(badge => badge.style.opacity = '1');
 
-            // Mulai Animasi Pergerakan
             const avatar = document.getElementById('avatar');
-            
-            // Reset ke posisi awal (Rumah)
-            avatar.style.transition = 'none'; // Matikan transisi sebentar
+            avatar.style.transition = 'none';
             avatar.style.top = '15%';
             avatar.style.left = '20%';
             avatar.innerText = '👧'; 
 
-            // Paksa browser membaca perubahan sebelum menyalakan transisi lagi
             setTimeout(() => {
                 avatar.style.transition = 'all 2.5s ease-in-out';
-                
-                // Jalan ke Terminal naik Bus
                 avatar.style.top = '50%';
                 avatar.style.left = '80%';
-                avatar.innerText = '🚌💨'; // Ganti icon jadi bus
+                avatar.innerText = '🚌💨'; 
                 
-                // Jalan ke Point Lab dijemput motor (setelah sampai terminal)
                 setTimeout(() => {
                     avatar.style.top = '85%';
                     avatar.style.left = '30%';
-                    avatar.innerText = '🏍️👫'; // Ganti icon jadi boncengan berdua!
-                }, 3000); // Tunggu 3 detik (durasi transisi pertama + sedikit delay)
+                    avatar.innerText = '🏍️👫'; // Boncengan berangkat
+                }, 3000); 
 
+            }, 50);
+        }
+
+        function mulaiPulang() {
+            const inputWaktu = document.getElementById('waktuPulang').value;
+            if (!inputWaktu) {
+                alert("Isi jam pulangnya dulu ya! 🕒");
+                return;
+            }
+
+            let [jam, menit] = inputWaktu.split(':').map(Number);
+            let waktuMulaiPulang = new Date();
+            waktuMulaiPulang.setHours(jam, menit, 0);
+
+            // Perjalanan pulang (Point Lab -> Terminal = 20 menit)
+            let waktuSampaiTerminal = new Date(waktuMulaiPulang.getTime() + (20 * 60000));
+
+            resetWaktuBadge(); // Sembunyikan badge yang lama
+
+            // Update badge untuk rute pulang
+            document.getElementById('waktu-pointlab').innerText = formatWaktu(waktuMulaiPulang) + " (Pulang)";
+            document.getElementById('waktu-terminal').innerText = formatWaktu(waktuSampaiTerminal) + " (Sampai)";
+            
+            setTimeout(() => {
+                document.getElementById('waktu-pointlab').style.opacity = '1';
+                document.getElementById('waktu-terminal').style.opacity = '1';
+            }, 100);
+
+            const avatar = document.getElementById('avatar');
+            
+            // Set karakter di Point Lab
+            avatar.style.transition = 'none';
+            avatar.style.top = '85%';
+            avatar.style.left = '30%';
+            avatar.innerText = '👧'; 
+
+            setTimeout(() => {
+                avatar.style.transition = 'all 2.5s ease-in-out';
+                avatar.style.top = '50%';
+                avatar.style.left = '80%';
+                avatar.innerText = '🏍️👫'; // Boncengan balik ke terminal
             }, 50);
         }
     </script>
